@@ -2,16 +2,15 @@
 
 import argparse
 
+from terra_project_ll97_dataset.arguments import BuildDatasetArguments
+from terra_project_ll97_dataset.dataset.dataset_builder import DatasetBuilder
+
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="increase output verbosity")
-    args = parser.parse_args()
-    if args.verbose:
-        print("verbosity turned on")
-
-    print("Ok")
+    arguments = BuildDatasetArguments()
+    arguments.parse_args()
+    builder = DatasetBuilder(arguments.args)
+    builder.run()
 
 
 if __name__ == '__main__':

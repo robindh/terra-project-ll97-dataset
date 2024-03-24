@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 argparse = "^1.4.0"
+pandas = "^2.2.1"
 
 [tool.poetry.scripts]
 build_dataset = "terra_project_ll97_dataset.build_dataset:main"
