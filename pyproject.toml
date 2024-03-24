@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "terra-project-ll97-dataset"
+version = "0.1.0"
+description = ""
+authors = ["Robin Dhamankar <robin.dhamankar@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+argparse = "^1.4.0"
+
+[tool.poetry.scripts]
+build_dataset = "terra_project_ll97_dataset.build_dataset:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
