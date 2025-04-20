@@ -49,12 +49,12 @@ class DatasetBuilder:
     energy costs, and penalties for buildings.
     """
 
-    def __init__(self, arguments: BuildDatasetArguments):
+    def __init__(self, arguments: argparse.Namespace):
         """
         Initialize the dataset builder with command line arguments.
         
         Args:
-            arguments (BuildDatasetArguments): Parsed command line arguments
+            arguments (argparse.Namespace): Parsed command line arguments
         """
         self.arguments = arguments
         self.start_year = 2024
