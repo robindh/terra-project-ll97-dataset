@@ -128,7 +128,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- New York City Department of Buildings
+- [NYC Open Data](https://opendata.cityofnewyork.us/) - The source of our building datasets
 - Local Law 97 (LL97) documentation
 - Local Law 84 (LL84) documentation
 
