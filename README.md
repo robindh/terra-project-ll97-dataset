@@ -2,6 +2,14 @@
 
 A Python tool for processing and analyzing Local Law 97 (LL97) compliance data for buildings in New York City. This tool processes LL97 and LL84 datasets to calculate carbon emissions, energy costs, and penalties for buildings.
 
+This project was developed as part of a [terra.do](https://terra.do) course by a collaborative group of learners focused on climate tech and sustainability solutions.
+
+## Project Context
+
+This tool was created as a group project during a terra.do course, bringing together individuals passionate about addressing climate change through technology. The collaborative nature of this project allowed us to combine diverse perspectives and expertise to create a comprehensive solution for analyzing building emissions compliance in New York City.
+
+For detailed project documentation and background, visit our [project documentation page](https://tame-echo-70d.notion.site/Local-Law-97-Terra-do-final-project-46e92934b03f46d790f190ce599127c1).
+
 ## Overview
 
 Local Law 97 (LL97) is a New York City law that sets carbon emissions limits for buildings over 25,000 square feet. This tool helps analyze building compliance by:
