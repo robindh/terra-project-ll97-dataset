@@ -1,7 +1,7 @@
 from typing import Dict
 
 from terra_project_ll97_dataset.calculator.energy_unit_conversion import get_energy_consumption_in_billing_units
-from terra_project_ll97_dataset.util.common import EnergyTypes
+from terra_project_ll97_dataset.util.common import ENERGY_TYPES
 
 '''
 Carbon Emissions per energy type per year
@@ -27,8 +27,8 @@ def get_carbon_emissions_by_year_and_energy_type(
     for year in range(start_year, end_year_inclusive + 1):
         carbon_emissions[year]: Dict[str, float] = {}
         carbon_emission_per_unit_energy = 0.0
-        for energy_type in EnergyTypes:
-            match energy_type:
+        for energy_type in ENERGY_TYPES:
+            match energy_type.name:
                 case "Electricity":
                     if year >= 2030:
                         carbon_emission_per_unit_energy = 0.15 / 1000.00
@@ -45,7 +45,7 @@ def get_carbon_emissions_by_year_and_energy_type(
                     carbon_emission_per_unit_energy = 10.24 / 1000.00
                 case "Fuel Oil 4":
                     carbon_emission_per_unit_energy = 10.99 / 1000.00
-            carbon_emissions[year][energy_type] = carbon_emission_per_unit_energy
+            carbon_emissions[year][energy_type.name] = carbon_emission_per_unit_energy
 
     return carbon_emissions
 
@@ -59,6 +59,6 @@ def get_carbon_emissions(
     carbon_emissions_in_year = 0.0
     carbon_emissions_by_energy_type = carbon_emissions_lookup_table[year]
 
-    for energy_type in EnergyTypes:
-        carbon_emissions_in_year += energy_consumption[energy_type] * carbon_emissions_by_energy_type[energy_type]
+    for energy_type in ENERGY_TYPES:
+        carbon_emissions_in_year += energy_consumption[energy_type.name] * carbon_emissions_by_energy_type[energy_type.name]
     return carbon_emissions_in_year
