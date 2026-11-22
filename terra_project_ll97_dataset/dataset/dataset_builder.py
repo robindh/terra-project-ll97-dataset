@@ -18,7 +18,7 @@ from terra_project_ll97_dataset.calculator.cost_of_energy import get_cost_of_ene
     get_cost_of_energy_by_year_and_energy_type
 from terra_project_ll97_dataset.calculator.penalties import calculate_penalties
 from terra_project_ll97_dataset.dataset.data_cleansing import normalise_bbl, clean_format_numerical_columns
-from terra_project_ll97_dataset.util.common import get_year_ranges
+from terra_project_ll97_dataset.util.common import ANALYSIS_END_YEAR, ANALYSIS_START_YEAR, get_year_ranges
 
 
 def _avg_over_year_range(year_range: range, row: pd.Series, func: Callable[[int, pd.Series], float]) -> float:
@@ -57,8 +57,8 @@ class DatasetBuilder:
             arguments (argparse.Namespace): Parsed command line arguments
         """
         self.arguments = arguments
-        self.start_year = 2024
-        self.end_year = 2050
+        self.start_year = ANALYSIS_START_YEAR
+        self.end_year = ANALYSIS_END_YEAR
 
         # Initialize lookup tables for calculations
         self._carbon_emissions_lookup_table = get_carbon_emissions_by_year_and_energy_type(
