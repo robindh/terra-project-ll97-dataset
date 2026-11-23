@@ -108,6 +108,21 @@ class DatasetBuilder:
         """
         return get_carbon_emissions_thresholds(self._carbon_emissions_threshold_lookup_table, year, row)
 
+    def _add_metric_columns(self, df: pd.DataFrame, column_prefix: str, name_suffix: str, compute) -> None:
+        """Add emissions, cost, threshold, and penalty columns for one year or one period average."""
+        emissions_column = f"{column_prefix}_carbon_emissions{name_suffix}"
+        cost_column = f"{column_prefix}_cost_of_energy{name_suffix}"
+        threshold_column = f"{column_prefix}_carbon_emissions_threshold{name_suffix}"
+        penalty_column = f"{column_prefix}_estimated_penalty{name_suffix}"
+
+        df[emissions_column] = df.apply(lambda row: compute(row, self._get_carbon_emissions), axis=1)
+        df[cost_column] = df.apply(lambda row: compute(row, self._get_cost_of_energy), axis=1)
+        df[threshold_column] = df.apply(lambda row: compute(row, self._get_carbon_emissions_thresholds), axis=1)
+        df[penalty_column] = df.apply(
+            lambda row: calculate_penalties(row, emissions_column, threshold_column),
+            axis=1,
+        )
+
     def _build_yearly_dataset(self):
         """
         Build dataset with yearly calculations for each building.
@@ -117,23 +132,12 @@ class DatasetBuilder:
         df_with_yearly_values = self._joined_dataset.copy()
 
         for year in range(self.start_year, self.end_year + 1):
-            # Calculate and store yearly metrics
-            carbon_emissions_column_name = f"{year}_carbon_emissions"
-            df_with_yearly_values[carbon_emissions_column_name] = df_with_yearly_values.apply(
-                lambda x: self._get_carbon_emissions(year, x), axis=1)
-
-            cost_of_energy_column_name = f"{year}_cost_of_energy"
-            df_with_yearly_values[cost_of_energy_column_name] = df_with_yearly_values.apply(
-                lambda x: self._get_cost_of_energy(year, x), axis=1)
-
-            carbon_emissions_threshold_column_name = f"{year}_carbon_emissions_threshold"
-            df_with_yearly_values[carbon_emissions_threshold_column_name] = df_with_yearly_values.apply(
-                lambda x: self._get_carbon_emissions_thresholds(year, x), axis=1)
-
-            estimated_penalty_column_name = f"{year}_estimated_penalty"
-            df_with_yearly_values[estimated_penalty_column_name] = df_with_yearly_values.apply(
-                lambda x: calculate_penalties(x, carbon_emissions_column_name, carbon_emissions_threshold_column_name),
-                axis=1)
+            self._add_metric_columns(
+                df_with_yearly_values,
+                str(year),
+                "",
+                lambda row, func, year=year: func(year, row),
+            )
 
         # Save yearly dataset to CSV
         df_with_yearly_values.to_csv(
@@ -148,26 +152,12 @@ class DatasetBuilder:
         df_for_range_of_years = self._joined_dataset.copy()
 
         for period in get_year_ranges():
-            year_range_string = period.label
-            year_range = period.years
-
-            # Calculate and store range-based metrics
-            carbon_emissions_column_name = f"{year_range_string}_carbon_emissions_per_year"
-            df_for_range_of_years[carbon_emissions_column_name] = df_for_range_of_years.apply(
-                lambda x: _avg_over_year_range(year_range, x, self._get_carbon_emissions), axis=1)
-
-            cost_of_energy_column_name = f"{year_range_string}_cost_of_energy_per_year"
-            df_for_range_of_years[cost_of_energy_column_name] = df_for_range_of_years.apply(
-                lambda x: _avg_over_year_range(year_range, x, self._get_cost_of_energy), axis=1)
-
-            carbon_emissions_threshold_column_name = f"{year_range_string}_carbon_emissions_threshold_per_year"
-            df_for_range_of_years[carbon_emissions_threshold_column_name] = df_for_range_of_years.apply(
-                lambda x: _avg_over_year_range(year_range, x, self._get_carbon_emissions_thresholds), axis=1)
-
-            estimated_penalty_column_name = f"{year_range_string}_estimated_penalty_per_year"
-            df_for_range_of_years[estimated_penalty_column_name] = df_for_range_of_years.apply(
-                lambda x: calculate_penalties(x, carbon_emissions_column_name, carbon_emissions_threshold_column_name),
-                axis=1)
+            self._add_metric_columns(
+                df_for_range_of_years,
+                period.label,
+                "_per_year",
+                lambda row, func, years=period.years: _avg_over_year_range(years, row, func),
+            )
 
         # Save range-based dataset to CSV
         df_for_range_of_years.to_csv(
