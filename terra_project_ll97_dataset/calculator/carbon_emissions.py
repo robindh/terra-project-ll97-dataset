@@ -1,64 +1,34 @@
-from typing import Dict
+from terra_project_ll97_dataset.calculator.energy_unit_conversion import sum_consumption_times_rate
+from terra_project_ll97_dataset.util.common import (
+    EMISSION_FACTOR_CHANGE_YEAR,
+    EMISSION_FACTORS_TCO2E_PER_BILLING_UNIT,
+    ENERGY_TYPES,
+)
 
-from terra_project_ll97_dataset.calculator.energy_unit_conversion import get_energy_consumption_in_billing_units
-from terra_project_ll97_dataset.util.common import ENERGY_TYPES
 
-'''
-Carbon Emissions per energy type per year
-
-Electricity -> "tCO2e/kWh"
-
-Natural Gas -> "tCO2e/therm"
-
-Steam -> tCO2e/Mlb
-
-Fuel Oil #2 tCO2e/gal
-
-Fuel Oil #4 tCO2e/gal
-
-'''
+def _tco2e_per_billing_unit(energy_name: str, year: int) -> float:
+    before_change, from_change = EMISSION_FACTORS_TCO2E_PER_BILLING_UNIT[energy_name]
+    if year >= EMISSION_FACTOR_CHANGE_YEAR:
+        return from_change
+    return before_change
 
 
 def get_carbon_emissions_by_year_and_energy_type(
         start_year: int,
-        end_year_inclusive: int) -> Dict[int, Dict[str, float]]:
-    carbon_emissions: Dict[int, Dict[str, float]] = {}
+        end_year_inclusive: int) -> dict[int, dict[str, float]]:
+    carbon_emissions: dict[int, dict[str, float]] = {}
 
     for year in range(start_year, end_year_inclusive + 1):
-        carbon_emissions[year]: Dict[str, float] = {}
-        carbon_emission_per_unit_energy = 0.0
-        for energy_type in ENERGY_TYPES:
-            match energy_type.name:
-                case "Electricity":
-                    if year >= 2030:
-                        carbon_emission_per_unit_energy = 0.15 / 1000.00
-                    else:
-                        carbon_emission_per_unit_energy = 0.29 / 1000.00
-                case "Natural Gas":
-                    carbon_emission_per_unit_energy = 5.0 / 1000.00
-                case "Steam":
-                    if year >= 2030:
-                        carbon_emission_per_unit_energy = 51.6 / 1000.00
-                    else:
-                        carbon_emission_per_unit_energy = 53.6 / 1000.00
-                case "Fuel Oil 2":
-                    carbon_emission_per_unit_energy = 10.24 / 1000.00
-                case "Fuel Oil 4":
-                    carbon_emission_per_unit_energy = 10.99 / 1000.00
-            carbon_emissions[year][energy_type.name] = carbon_emission_per_unit_energy
+        carbon_emissions[year] = {
+            energy_type.name: _tco2e_per_billing_unit(energy_type.name, year)
+            for energy_type in ENERGY_TYPES
+        }
 
     return carbon_emissions
 
 
 def get_carbon_emissions(
-        carbon_emissions_lookup_table: Dict[int, Dict[str, float]],
+        carbon_emissions_lookup_table: dict[int, dict[str, float]],
         year: int,
         row) -> float:
-    energy_consumption = get_energy_consumption_in_billing_units(row)
-
-    carbon_emissions_in_year = 0.0
-    carbon_emissions_by_energy_type = carbon_emissions_lookup_table[year]
-
-    for energy_type in ENERGY_TYPES:
-        carbon_emissions_in_year += energy_consumption[energy_type.name] * carbon_emissions_by_energy_type[energy_type.name]
-    return carbon_emissions_in_year
+    return sum_consumption_times_rate(row, carbon_emissions_lookup_table[year])
