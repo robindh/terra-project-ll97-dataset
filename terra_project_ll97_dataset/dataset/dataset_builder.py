@@ -108,8 +108,13 @@ class DatasetBuilder:
         """
         return get_carbon_emissions_thresholds(self._carbon_emissions_threshold_lookup_table, year, row)
 
-    def _add_metric_columns(self, df: pd.DataFrame, column_prefix: str, name_suffix: str, compute) -> None:
-        """Add emissions, cost, threshold, and penalty columns for one year or one period average."""
+    def _add_emissions_cost_threshold_and_penalty(self, df: pd.DataFrame, column_prefix: str, name_suffix: str, compute) -> None:
+        """Add carbon emissions, energy cost, emissions threshold, and penalty columns.
+
+        ``column_prefix`` is a year or a period label. ``name_suffix`` is empty for a
+        single year and ``_per_year`` for a period average. ``compute`` turns a row
+        and a per-year function into the value stored in each of the first three columns.
+        """
         emissions_column = f"{column_prefix}_carbon_emissions{name_suffix}"
         cost_column = f"{column_prefix}_cost_of_energy{name_suffix}"
         threshold_column = f"{column_prefix}_carbon_emissions_threshold{name_suffix}"
@@ -132,7 +137,7 @@ class DatasetBuilder:
         df_with_yearly_values = self._joined_dataset.copy()
 
         for year in range(self.start_year, self.end_year + 1):
-            self._add_metric_columns(
+            self._add_emissions_cost_threshold_and_penalty(
                 df_with_yearly_values,
                 str(year),
                 "",
@@ -152,7 +157,7 @@ class DatasetBuilder:
         df_for_range_of_years = self._joined_dataset.copy()
 
         for period in get_year_ranges():
-            self._add_metric_columns(
+            self._add_emissions_cost_threshold_and_penalty(
                 df_for_range_of_years,
                 period.label,
                 "_per_year",
