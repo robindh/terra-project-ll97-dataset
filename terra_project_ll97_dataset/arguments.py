@@ -1,9 +1,10 @@
 """Command-line arguments for the LL97 dataset builder.
 
 Required inputs are the LL97 covered-buildings file, the latest LL84
-disclosure, and a directory for the two output CSVs. The carbon-limit
-table defaults to the copy shipped with this package, so the default
-resolves correctly from any working directory.
+disclosure, and a directory for the two output CSVs. A missing output
+directory is created, including any missing parent directories. The
+carbon-limit table defaults to the copy shipped with this package, so
+the default resolves correctly from any working directory.
 """
 
 import argparse
@@ -18,7 +19,10 @@ DEFAULT_CARBON_THRESHOLDS_CSV = os.path.join(
 
 
 def _dir_path(path: str) -> str:
-    """Return path when it names an existing directory.
+    """Return path, creating the directory when it is missing.
+
+    An existing path must already be a directory. A missing path is
+    created, including any missing parent directories.
 
     Args:
         path: Candidate output directory.
@@ -27,13 +31,22 @@ def _dir_path(path: str) -> str:
         The same path.
 
     Raises:
-        argparse.ArgumentTypeError: path is not a directory.
+        argparse.ArgumentTypeError: path exists and is not a directory,
+            or the directory could not be created.
     """
     if os.path.isdir(path):
         return path
-    raise argparse.ArgumentTypeError(
-        f"readable_dir:{path} is not a valid path"
-    )
+    if os.path.exists(path):
+        raise argparse.ArgumentTypeError(
+            f"readable_dir:{path} is not a valid path"
+        )
+    try:
+        os.makedirs(path)
+    except OSError as error:
+        raise argparse.ArgumentTypeError(
+            f"readable_dir:{path} is not a valid path"
+        ) from error
+    return path
 
 
 def _file_path(path: str) -> str:
@@ -116,7 +129,10 @@ class BuildDatasetArguments:
             "--output_dir",
             type=_dir_path,
             required=True,
-            help="directory where the output will be written",
+            help=(
+                "directory where the output will be written. "
+                "Created when it does not already exist"
+            ),
         )
 
     def parse_args(self) -> None:

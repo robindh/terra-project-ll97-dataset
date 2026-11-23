@@ -33,6 +33,64 @@ def test_help_exits_zero_and_still_accepts_verbose():
     assert "--verbose" in result.stdout
 
 
+def test_missing_output_directory_is_created(tmp_path):
+    output_dir = tmp_path / "new" / "out"
+    assert not output_dir.exists()
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "terra_project_ll97_dataset.build_dataset",
+            "--ll97_dataset",
+            str(FIXTURES / "ll97_synthetic.csv"),
+            "--ll84_dataset",
+            str(FIXTURES / "ll84_synthetic.csv"),
+            "--output_dir",
+            str(output_dir),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    pdt.assert_frame_equal(
+        _read_frame(output_dir / YEARLY_NAME),
+        _read_frame(FIXTURES / YEARLY_NAME),
+        check_exact=True,
+    )
+    pdt.assert_frame_equal(
+        _read_frame(output_dir / RANGE_NAME),
+        _read_frame(FIXTURES / RANGE_NAME),
+        check_exact=True,
+    )
+
+
+def test_output_path_that_is_a_file_is_rejected(tmp_path):
+    output_file = tmp_path / "not-a-directory"
+    output_file.write_text("x")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "terra_project_ll97_dataset.build_dataset",
+            "--ll97_dataset",
+            str(FIXTURES / "ll97_synthetic.csv"),
+            "--ll84_dataset",
+            str(FIXTURES / "ll84_synthetic.csv"),
+            "--output_dir",
+            str(output_file),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "not a valid path" in result.stderr
+    assert output_file.read_text() == "x"
+
+
 def test_missing_input_file_is_rejected(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()
