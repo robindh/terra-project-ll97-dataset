@@ -1,17 +1,18 @@
 import pandas as pd
 
+from terra_project_ll97_dataset.util.common import (
+    ENERGY_TYPES,
+    LARGEST_PROPERTY_USE_GFA_SQFT,
+    SECOND_LARGEST_PROPERTY_USE_GFA_SQFT,
+    THIRD_LARGEST_PROPERTY_USE_GFA_SQFT,
+)
+
 
 def clean_format_numerical_columns(clean_joined_df: pd.DataFrame) -> pd.DataFrame:
-    # Convert to numeric columns and coerce
-    columns_to_convert = [
-        "Electricity Use - Grid Purchase (kWh)",
-        "Natural Gas Use (kBtu)",
-        "District Steam Use (kBtu)",
-        "Fuel Oil #2 Use (kBtu)",
-        "Fuel Oil #4 Use (kBtu)",
-        "Largest Property Use Type - Gross Floor Area (ft²)",
-        "2nd Largest Property Use Type - Gross Floor Area (ft²)",
-        "3rd Largest Property Use Type - Gross Floor Area (ft²)",
+    columns_to_convert = [energy_type.source_column for energy_type in ENERGY_TYPES] + [
+        LARGEST_PROPERTY_USE_GFA_SQFT,
+        SECOND_LARGEST_PROPERTY_USE_GFA_SQFT,
+        THIRD_LARGEST_PROPERTY_USE_GFA_SQFT,
     ]
 
     for column in columns_to_convert:
