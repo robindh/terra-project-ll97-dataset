@@ -20,6 +20,11 @@ ENERGY_TYPES: tuple[EnergyType, ...] = (
     EnergyType("Fuel Oil 4", "Fuel Oil #4 Use (kBtu)", 146.00),
 )
 
+LARGEST_PROPERTY_USE_TYPE = "Largest Property Use Type"
+LARGEST_PROPERTY_USE_GFA_SQFT = "Largest Property Use Type - Gross Floor Area (ft²)"
+SECOND_LARGEST_PROPERTY_USE_GFA_SQFT = "2nd Largest Property Use Type - Gross Floor Area (ft²)"
+THIRD_LARGEST_PROPERTY_USE_GFA_SQFT = "3rd Largest Property Use Type - Gross Floor Area (ft²)"
+
 # Years the dataset builder calculates. The last LL97 period is open-ended
 # (2050+), but averages still stop at ANALYSIS_END_YEAR.
 ANALYSIS_START_YEAR = 2024

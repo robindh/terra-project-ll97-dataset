@@ -1,5 +1,9 @@
 import pandas as pd
-from terra_project_ll97_dataset.util.common import PERIOD_START_YEARS
+from terra_project_ll97_dataset.util.common import (
+    LARGEST_PROPERTY_USE_GFA_SQFT,
+    LARGEST_PROPERTY_USE_TYPE,
+    PERIOD_START_YEARS,
+)
 
 
 def get_carbon_emissions_threshold_by_building_type_and_start_year(carbon_emissions_by_building_type_file_path: str):
@@ -10,7 +14,7 @@ def get_carbon_emissions_threshold_by_building_type_and_start_year(carbon_emissi
 
 
 def get_carbon_emissions_thresholds(carbon_emissions_threshold_lookup_table, year, row):
-    if row['Largest Property Use Type'] not in carbon_emissions_threshold_lookup_table.keys():
+    if row[LARGEST_PROPERTY_USE_TYPE] not in carbon_emissions_threshold_lookup_table.keys():
         return 0.0
 
     # find the start year for the range this year falls in
@@ -20,8 +24,8 @@ def get_carbon_emissions_thresholds(carbon_emissions_threshold_lookup_table, yea
             break
         reference_start_year = start_year
 
-    gross_floor_area_sq_feet = float(row["Largest Property Use Type - Gross Floor Area (ft²)"])
-    carbon_emissions_threshold_per_sq_foot = carbon_emissions_threshold_lookup_table[row['Largest Property Use Type']][
+    gross_floor_area_sq_feet = float(row[LARGEST_PROPERTY_USE_GFA_SQFT])
+    carbon_emissions_threshold_per_sq_foot = carbon_emissions_threshold_lookup_table[row[LARGEST_PROPERTY_USE_TYPE]][
         str(reference_start_year)]
 
     return gross_floor_area_sq_feet * carbon_emissions_threshold_per_sq_foot
