@@ -13,6 +13,7 @@ import pandas as pd
 from terra_project_ll97_dataset.calculator import carbon_emissions
 from terra_project_ll97_dataset.calculator import carbon_emissions_thresholds
 from terra_project_ll97_dataset.calculator import cost_of_energy
+from terra_project_ll97_dataset.calculator import energy_unit_conversion
 from terra_project_ll97_dataset.calculator import penalties
 from terra_project_ll97_dataset.dataset import data_cleansing
 from terra_project_ll97_dataset.util import common
@@ -119,10 +120,10 @@ class DatasetBuilder:
     ) -> None:
         """Add emissions, cost, limit, and penalty columns in place.
 
-        name_suffix is empty for one calendar year and "_per_year" for a
-        period average. compute receives the building row and the per-year
-        function. The penalty uses the emissions and limit columns just
-        written, so it matches that same year or period.
+        The period builder uses this for one compliance period. compute
+        receives the building row and the per-year function. The penalty
+        uses the emissions and limit columns just written, so it matches
+        that same period.
 
         Args:
             df: Building frame to extend.
@@ -158,26 +159,76 @@ class DatasetBuilder:
             axis=1,
         )
 
-    def _build_yearly_dataset(self) -> None:
-        """Write one row per building with a column group per year."""
-        df_with_yearly_values = self._joined_dataset.copy()
+    def _yearly_metric_columns(self, buildings: pd.DataFrame) -> pd.DataFrame:
+        """Return every year's emissions, cost, limit, and penalty.
 
-        for year in range(self.start_year, self.end_year + 1):
-            # Bind year now. A closure over the loop variable would use
-            # the final year for every column.
-            self._add_emissions_cost_threshold_and_penalty(
-                df_with_yearly_values,
-                str(year),
-                "",
-                lambda row, func, year=year: func(year, row),
+        Consumption is converted once. Each year then multiplies that
+        consumption by the year's rates and looks up that year's limit.
+        Columns stay in year order, and within a year they stay emissions,
+        cost, limit, penalty.
+
+        Args:
+            buildings: Joined building rows.
+
+        Returns:
+            One row per building and one column per year-metric pair.
+        """
+        consumption = (
+            energy_unit_conversion.billing_unit_consumption_by_energy_type(
+                buildings
             )
+        )
+        columns: dict[str, pd.Series] = {}
+        for year in range(self.start_year, self.end_year + 1):
+            emissions = (
+                energy_unit_conversion.sum_billing_unit_consumption_times_rate(
+                    consumption,
+                    self._carbon_emissions_lookup_table[year],
+                )
+            )
+            cost = (
+                energy_unit_conversion.sum_billing_unit_consumption_times_rate(
+                    consumption,
+                    self._cost_of_energy_lookup_table[year],
+                )
+            )
+            threshold = (
+                carbon_emissions_thresholds
+                .get_carbon_emissions_threshold_amounts(
+                    self._carbon_emissions_threshold_lookup_table,
+                    year,
+                    buildings,
+                )
+            )
+            penalty = penalties.calculate_penalty_amounts(
+                emissions,
+                threshold,
+            )
+            prefix = str(year)
+            columns[f"{prefix}_carbon_emissions"] = emissions
+            columns[f"{prefix}_cost_of_energy"] = cost
+            columns[f"{prefix}_carbon_emissions_threshold"] = threshold
+            columns[f"{prefix}_estimated_penalty"] = penalty
+        return pd.DataFrame(columns, index=buildings.index)
 
+    def _build_yearly_dataset(self) -> None:
+        """Write one row per building with a column group per year.
+
+        All year columns are calculated together and joined once. Adding
+        them with one DataFrame.apply per year per metric fragments the
+        frame and dominates runtime on a full LL84 file.
+        """
+        yearly = pd.concat(
+            [
+                self._joined_dataset,
+                self._yearly_metric_columns(self._joined_dataset),
+            ],
+            axis=1,
+        )
         yearly_name = (
             "dataset_estimated_emissions_cost_penalties_for_each_year.csv"
         )
-        df_with_yearly_values.to_csv(
-            os.path.join(self.arguments.output_dir, yearly_name)
-        )
+        yearly.to_csv(os.path.join(self.arguments.output_dir, yearly_name))
 
     def _build_dataset_for_range_of_years(self) -> None:
         """Write one row per building with a column group per period."""
