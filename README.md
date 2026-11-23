@@ -52,10 +52,9 @@ poetry install
 
 ### Basic Usage
 
-Create the output directory first. The tool checks that it already exists.
+The tool creates `--output_dir` when that folder does not exist, including any missing parent folders. A path that already exists must be a directory.
 
 ```bash
-mkdir -p path/to/output_directory
 poetry run python -m terra_project_ll97_dataset.build_dataset \
     --ll97_dataset path/to/ll97_data.csv \
     --ll84_dataset path/to/ll84_data.csv \
@@ -66,7 +65,7 @@ poetry run python -m terra_project_ll97_dataset.build_dataset \
 
 - `--ll97_dataset`: Path to an existing LL97 dataset CSV file
 - `--ll84_dataset`: Path to an existing LL84 dataset CSV file
-- `--output_dir`: Existing directory where output files will be saved
+- `--output_dir`: Directory where output files will be saved. Created when it does not already exist.
 
 ### Optional Arguments
 
