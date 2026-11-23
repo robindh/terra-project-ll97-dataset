@@ -32,18 +32,18 @@ Local Law 97 (LL97) is a New York City law that sets carbon emissions limits for
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.12 or newer
 - Poetry for dependency management
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/terra-project-ll97-dataset.git
+git clone https://github.com/robindh/terra-project-ll97-dataset.git
 cd terra-project-ll97-dataset
 ```
 
-2. Install dependencies using Poetry:
+2. Install dependencies using Poetry. This also installs the test tools:
 ```bash
 poetry install
 ```
@@ -52,7 +52,10 @@ poetry install
 
 ### Basic Usage
 
+Create the output directory first. The tool checks that it already exists.
+
 ```bash
+mkdir -p path/to/output_directory
 poetry run python -m terra_project_ll97_dataset.build_dataset \
     --ll97_dataset path/to/ll97_data.csv \
     --ll84_dataset path/to/ll84_data.csv \
@@ -61,14 +64,14 @@ poetry run python -m terra_project_ll97_dataset.build_dataset \
 
 ### Required Arguments
 
-- `--ll97_dataset`: Path to the LL97 dataset CSV file
-- `--ll84_dataset`: Path to the LL84 dataset CSV file
-- `--output_dir`: Directory where output files will be saved
+- `--ll97_dataset`: Path to an existing LL97 dataset CSV file
+- `--ll84_dataset`: Path to an existing LL84 dataset CSV file
+- `--output_dir`: Existing directory where output files will be saved
 
 ### Optional Arguments
 
-- `--carbon_emissions_by_building_type`: Path to the carbon emissions thresholds file (defaults to included data file)
-- `-v, --verbose`: Increase output verbosity
+- `--carbon_emissions_by_building_type`: Path to the carbon emissions thresholds file. The default is the table shipped with this package, and that default works from any working directory.
+- `-v, --verbose`: Accepted, and currently silent. Setting it does not change the output.
 
 ## Output Files
 
@@ -79,8 +82,9 @@ The tool generates two main output files:
    - Includes carbon emissions, energy costs, thresholds, and penalties
 
 2. `dataset_estimated_emissions_cost_penalties_for_year_range.csv`
-   - Contains calculations averaged over specified year ranges
-   - Provides aggregated metrics for compliance analysis
+   - Averages the same metrics over each compliance period
+   - Period columns are `2024-2029`, `2030-2034`, `2035-2039`, `2040-2049`, and `2050+`
+   - `2050+` averages only the year 2050
 
 ## Project Structure
 
@@ -98,14 +102,10 @@ terra_project_ll97_dataset/
 
 ### Setting Up Development Environment
 
-1. Create a virtual environment:
-```bash
-poetry shell
-```
+`poetry install` from the installation steps is enough to run the tests. To activate that environment in the current shell:
 
-2. Install development dependencies:
 ```bash
-poetry install --with dev
+source $(poetry env activate)
 ```
 
 ### Running Tests
