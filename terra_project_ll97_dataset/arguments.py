@@ -15,18 +15,6 @@ DEFAULT_CARBON_THRESHOLDS_CSV = os.path.join(
 
 
 def _dir_path(path: str) -> str:
-    """
-    Validates that a given path is a directory.
-    
-    Args:
-        path (str): The path to validate
-        
-    Returns:
-        str: The validated directory path
-        
-    Raises:
-        argparse.ArgumentTypeError: If the path is not a valid directory
-    """
     if os.path.isdir(path):
         return path
     else:
@@ -34,18 +22,6 @@ def _dir_path(path: str) -> str:
 
 
 def _file_path(path: str) -> str:
-    """
-    Validates that a given path is a file.
-    
-    Args:
-        path (str): The path to validate
-        
-    Returns:
-        str: The validated file path
-        
-    Raises:
-        argparse.ArgumentTypeError: If the path is not a valid file
-    """
     if os.path.isfile(path):
         return path
     else:
@@ -53,13 +29,7 @@ def _file_path(path: str) -> str:
 
 
 class BuildDatasetArguments:
-    """
-    Handles command line argument parsing for the dataset builder.
-    Defines and manages all required arguments for processing LL97 and LL84 datasets.
-    """
-
     def __init__(self):
-        """Initialize the argument parser and add all required arguments."""
         self.args = None
         self.parser = argparse.ArgumentParser(
             description="Build LL97 dataset with carbon emissions, energy costs, and penalties"
@@ -67,10 +37,6 @@ class BuildDatasetArguments:
         self.add_arguments()
 
     def add_arguments(self):
-        """
-        Add all required command line arguments to the parser.
-        Includes arguments for input datasets, output directory, and verbosity.
-        """
         self.parser.add_argument(
             "-v", "--verbose",
             action="store_true",
@@ -102,6 +68,5 @@ class BuildDatasetArguments:
         )
 
     def parse_args(self):
-        """Parse the command line arguments and store them in self.args."""
         self.args = self.parser.parse_args()
 
