@@ -1,6 +1,5 @@
 # Common enums and constants
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass(frozen=True)
@@ -26,8 +25,8 @@ ENERGY_TYPES: tuple[EnergyType, ...] = (
 ANALYSIS_START_YEAR = 2024
 ANALYSIS_END_YEAR = 2050
 
-# years when the carbon emissions threshold change
-StartYears: List[int] = [2024, 2030, 2035, 2040, 2050]
+# Years when the carbon emissions threshold changes.
+PERIOD_START_YEARS: list[int] = [2024, 2030, 2035, 2040, 2050]
 
 # Electricity and steam emission factors change at this year.
 EMISSION_FACTOR_CHANGE_YEAR = 2030
@@ -69,13 +68,27 @@ ENERGY_PRICES_DOLLARS_PER_BILLING_UNIT: dict[str, float] = {
 }
 
 
-def get_year_ranges():
-    year_ranges = []
+@dataclass(frozen=True)
+class YearPeriod:
+    """One LL97 compliance period.
 
-    for index, year in enumerate(StartYears):
-        if index + 1 < len(StartYears):
-            year_ranges.append((year, StartYears[index + 1] - 1))
+    Labels look like ``2024-2029``. The final period is open-ended: its label
+    is ``2050+`` and its range is only the start year (``range(2050, 2051)``),
+    which is the average the builder uses today.
+    """
+
+    label: str
+    years: range
+
+
+def get_year_ranges() -> list[YearPeriod]:
+    periods = []
+
+    for index, start_year in enumerate(PERIOD_START_YEARS):
+        if index + 1 < len(PERIOD_START_YEARS):
+            end_year = PERIOD_START_YEARS[index + 1] - 1
+            periods.append(YearPeriod(f"{start_year}-{end_year}", range(start_year, end_year + 1)))
         else:
-            year_ranges.append((year, -1))
+            periods.append(YearPeriod(f"{start_year}+", range(start_year, start_year + 1)))
 
-    return year_ranges
+    return periods

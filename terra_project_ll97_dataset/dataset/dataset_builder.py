@@ -147,10 +147,9 @@ class DatasetBuilder:
         """
         df_for_range_of_years = self._joined_dataset.copy()
 
-        for year_range_tuple in get_year_ranges():
-            year_range_string = f"{year_range_tuple[0]}{'-' + str(year_range_tuple[1]) if year_range_tuple[1] > 0 else '+'}"
-            year_range = range(year_range_tuple[0],
-                             year_range_tuple[1] + 1 if year_range_tuple[1] > 0 else year_range_tuple[0] + 1)
+        for period in get_year_ranges():
+            year_range_string = period.label
+            year_range = period.years
 
             # Calculate and store range-based metrics
             carbon_emissions_column_name = f"{year_range_string}_carbon_emissions_per_year"

@@ -1,5 +1,5 @@
 import pandas as pd
-from terra_project_ll97_dataset.util.common import StartYears
+from terra_project_ll97_dataset.util.common import PERIOD_START_YEARS
 
 
 def get_carbon_emissions_threshold_by_building_type_and_start_year(carbon_emissions_by_building_type_file_path: str):
@@ -15,7 +15,7 @@ def get_carbon_emissions_thresholds(carbon_emissions_threshold_lookup_table, yea
 
     # find the start year for the range this year falls in
     reference_start_year = 0
-    for start_year in StartYears:
+    for start_year in PERIOD_START_YEARS:
         if year < start_year:
             break
         reference_start_year = start_year
