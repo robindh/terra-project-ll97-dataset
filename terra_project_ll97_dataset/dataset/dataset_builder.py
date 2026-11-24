@@ -18,10 +18,6 @@ from terra_project_ll97_dataset.calculator import penalties
 from terra_project_ll97_dataset.dataset import data_cleansing
 from terra_project_ll97_dataset.util import common
 
-# Original LL84 BBL text. Missing after the left join when an LL97
-# building has no LL84 row.
-_LL84_BBL_COLUMN = "NYC Borough, Block and Lot (BBL)"
-
 
 def _avg_over_year_range(
     year_range: range,
@@ -278,9 +274,13 @@ class DatasetBuilder:
 
         ll84_df = pd.read_csv(
             self.arguments.ll84_dataset,
-            dtype={_LL84_BBL_COLUMN: "string"},
+            dtype={common.LL84_BBL: "string"},
         )
-        ll84_df["BBL"] = ll84_df[_LL84_BBL_COLUMN].apply(
+        data_cleansing.require_ll84_columns(
+            ll84_df,
+            data_cleansing.REQUIRED_LL84_COLUMNS,
+        )
+        ll84_df["BBL"] = ll84_df[common.LL84_BBL].apply(
             data_cleansing.normalise_bbl
         )
         ll84_df_indexed = (
@@ -307,7 +307,7 @@ class DatasetBuilder:
         """
         joined = self._joined_dataset
         total = len(joined)
-        missing = int(joined[_LL84_BBL_COLUMN].isna().sum())
+        missing = int(joined[common.LL84_BBL].isna().sum())
         building = "building" if total == 1 else "buildings"
         if missing == 0:
             print(f"All {total} LL97 {building} matched an LL84 row.")

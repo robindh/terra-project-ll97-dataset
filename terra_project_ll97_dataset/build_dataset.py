@@ -3,9 +3,13 @@
 
 Run this module with the LL97 and LL84 CSV paths and an output directory.
 It writes one CSV of yearly estimates and one CSV of period averages.
+A missing expected LL84 header is printed and the run stops.
 """
 
+import sys
+
 from terra_project_ll97_dataset import arguments
+from terra_project_ll97_dataset.dataset import data_cleansing
 from terra_project_ll97_dataset.dataset import dataset_builder
 
 
@@ -15,7 +19,11 @@ def main() -> None:
     parsed.parse_args()
 
     builder = dataset_builder.DatasetBuilder(parsed.args)
-    builder.run()
+    try:
+        builder.run()
+    except data_cleansing.MissingLl84ColumnError as error:
+        print(error, file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
