@@ -181,15 +181,19 @@ class DatasetBuilder:
         columns: dict[str, pd.Series] = {}
         for year in range(self.start_year, self.end_year + 1):
             emissions = (
-                energy_unit_conversion.sum_billing_unit_consumption_times_rate(
+                energy_unit_conversion
+                .aggregate_billing_unit_consumption_times_rate(
                     consumption,
                     self._carbon_emissions_lookup_table[year],
+                    energy_unit_conversion.sum_fuel_products,
                 )
             )
             cost = (
-                energy_unit_conversion.sum_billing_unit_consumption_times_rate(
+                energy_unit_conversion
+                .aggregate_billing_unit_consumption_times_rate(
                     consumption,
                     self._cost_of_energy_lookup_table[year],
+                    energy_unit_conversion.sum_fuel_products,
                 )
             )
             threshold = (

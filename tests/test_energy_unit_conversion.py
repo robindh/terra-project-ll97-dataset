@@ -1,10 +1,11 @@
 import pandas as pd
 
 from terra_project_ll97_dataset.calculator.energy_unit_conversion import (
+    aggregate_billing_unit_consumption_times_rate,
     billing_unit_consumption_by_energy_type,
     get_energy_consumption_in_billing_units,
-    sum_billing_unit_consumption_times_rate,
     sum_consumption_times_rate,
+    sum_fuel_products,
 )
 
 
@@ -51,15 +52,24 @@ def test_column_totals_match_the_row_calculation():
         "Fuel Oil 2": 10.24 / 1000.00,
         "Fuel Oil 4": 10.99 / 1000.00,
     }
-    totals = sum_billing_unit_consumption_times_rate(
-        billing_unit_consumption_by_energy_type(buildings),
+    consumption = billing_unit_consumption_by_energy_type(buildings)
+    totals = aggregate_billing_unit_consumption_times_rate(
+        consumption,
         rates,
+        sum_fuel_products,
+    )
+    averaged = aggregate_billing_unit_consumption_times_rate(
+        consumption,
+        rates,
+        lambda products: sum_fuel_products(products) / len(products),
     )
     expected = [
         sum_consumption_times_rate(first, rates),
         sum_consumption_times_rate(second, rates),
     ]
     assert totals.tolist() == expected
+    fuel_count = len(consumption)
+    assert averaged.tolist() == [value / fuel_count for value in expected]
 
 
 def test_missing_source_column_contributes_zero():

@@ -4,6 +4,9 @@ Electricity stays in kWh. Natural gas becomes therms, district steam
 becomes Mlb, and fuel oil becomes gallons.
 """
 
+from collections.abc import Callable
+from collections.abc import Sequence
+
 import pandas as pd
 
 from terra_project_ll97_dataset.util import common
@@ -51,14 +54,33 @@ def billing_unit_consumption_by_energy_type(
     return consumption
 
 
-def sum_billing_unit_consumption_times_rate(
+def sum_fuel_products(products: Sequence[pd.Series]) -> pd.Series:
+    """Add per-fuel products, starting from 0.0.
+
+    Args:
+        products: One series per energy type, in ENERGY_TYPES order.
+            Every series shares an index.
+
+    Returns:
+        The sum for each building. Adding 0.0 first matches
+        sum_consumption_times_rate.
+    """
+    total = pd.Series(0.0, index=products[0].index, dtype="float64")
+    for product in products:
+        total = total + product
+    return total
+
+
+def aggregate_billing_unit_consumption_times_rate(
     consumption_by_energy_type: dict[str, pd.Series],
     rate_by_energy_type: dict[str, float],
+    aggregate: Callable[[Sequence[pd.Series]], pd.Series],
 ) -> pd.Series:
-    """Sum billing-unit consumption times a rate for each building.
+    """Combine each fuel's consumption times its rate.
 
-    The running total starts at 0.0 and adds energy types in ENERGY_TYPES
-    order, matching sum_consumption_times_rate.
+    aggregate decides how the per-fuel products are reduced.
+    sum_fuel_products totals them. A mean of those same products can
+    be passed instead.
 
     Args:
         consumption_by_energy_type: Billing-unit consumption for every
@@ -66,19 +88,18 @@ def sum_billing_unit_consumption_times_rate(
             series shares an index.
         rate_by_energy_type: tCO2e or dollars per billing unit, keyed by
             energy-type name. The mapping must contain every energy type.
+        aggregate: Reduction over the per-fuel products. Called once with
+            those products in ENERGY_TYPES order.
 
     Returns:
-        The total for each building. Emissions callers get tCO2e. Cost
-        callers get dollars.
+        The aggregated value for each building.
     """
-    index = next(iter(consumption_by_energy_type.values())).index
-    total = pd.Series(0.0, index=index, dtype="float64")
-    for energy_type in common.ENERGY_TYPES:
-        total = total + (
-            consumption_by_energy_type[energy_type.name]
-            * rate_by_energy_type[energy_type.name]
-        )
-    return total
+    products = [
+        consumption_by_energy_type[energy_type.name]
+        * rate_by_energy_type[energy_type.name]
+        for energy_type in common.ENERGY_TYPES
+    ]
+    return aggregate(products)
 
 
 def sum_consumption_times_rate(

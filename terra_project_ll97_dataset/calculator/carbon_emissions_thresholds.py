@@ -30,11 +30,15 @@ def get_carbon_emissions_threshold_by_building_type_and_start_year(
     return carbon_thresholds_df.to_dict("index")
 
 
-def latest_period_start_year(year: int) -> int:
-    """Return the latest limit-period start year at or before year.
+def emissions_limit_period_start_year(year: int) -> int:
+    """Return the start year of the emissions limit in effect for year.
+
+    The limit changes at each PERIOD_START_YEARS entry and stays in
+    effect until the next one. This is the latest of those start years
+    that is still on or before year.
 
     Args:
-        year: Calendar year.
+        year: Calendar year whose limit is needed.
 
     Returns:
         A year from PERIOD_START_YEARS, or 0 when year precedes every
@@ -72,7 +76,7 @@ def get_carbon_emissions_thresholds(
         return 0.0
 
     # Latest period start year that is still less than or equal to year.
-    reference_start_year = latest_period_start_year(year)
+    reference_start_year = emissions_limit_period_start_year(year)
     gross_floor_area_sq_feet = float(row[common.LARGEST_PROPERTY_USE_GFA_SQFT])
     factor = carbon_emissions_threshold_lookup_table[use_type][
         str(reference_start_year)
@@ -104,7 +108,7 @@ def get_carbon_emissions_threshold_amounts(
     gross_floor_area = buildings[common.LARGEST_PROPERTY_USE_GFA_SQFT].astype(
         "float64"
     )
-    year_key = str(latest_period_start_year(year))
+    year_key = str(emissions_limit_period_start_year(year))
 
     def factor(use: object) -> float:
         by_year = carbon_emissions_threshold_lookup_table.get(use)
