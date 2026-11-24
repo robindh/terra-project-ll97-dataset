@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from terra_project_ll97_dataset.calculator.carbon_emissions_thresholds import (
+    get_carbon_emissions_threshold_amounts,
     get_carbon_emissions_threshold_by_building_type_and_start_year,
     get_carbon_emissions_thresholds,
 )
@@ -67,3 +68,20 @@ def test_unknown_property_use_type_has_zero_threshold(threshold_table):
     row = _office_row()
     row["Largest Property Use Type"] = "Not A Real Type"
     assert get_carbon_emissions_thresholds(threshold_table, 2024, row) == 0.0
+
+
+def test_threshold_amounts_match_the_row_calculation(threshold_table):
+    office = _office_row()
+    unknown = _office_row()
+    unknown["Largest Property Use Type"] = "Not A Real Type"
+    buildings = pd.DataFrame([office, unknown])
+    amounts = get_carbon_emissions_threshold_amounts(
+        threshold_table,
+        2034,
+        buildings,
+    )
+    expected = [
+        get_carbon_emissions_thresholds(threshold_table, 2034, office),
+        get_carbon_emissions_thresholds(threshold_table, 2034, unknown),
+    ]
+    assert amounts.tolist() == expected

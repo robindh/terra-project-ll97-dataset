@@ -9,6 +9,28 @@ import pandas as pd
 from terra_project_ll97_dataset.util import common
 
 
+def calculate_penalty_amounts(
+    emissions: pd.Series,
+    limits: pd.Series,
+) -> pd.Series:
+    """Return penalties for aligned emissions and limit values.
+
+    This is calculate_penalties for a whole column. Emissions at or below
+    the limit are zero. Each tonne above the limit is charged at
+    PENALTY_DOLLARS_PER_TCO2E.
+
+    Args:
+        emissions: Emissions in tCO2e, one building per row.
+        limits: Limits in tCO2e, aligned with emissions.
+
+    Returns:
+        Penalty dollars, aligned with emissions.
+    """
+    excess = emissions - limits
+    charged = common.PENALTY_DOLLARS_PER_TCO2E * excess
+    return charged.where(emissions > limits, 0.0)
+
+
 def calculate_penalties(
     row: pd.Series,
     carbon_emmissions_column_name: str,
