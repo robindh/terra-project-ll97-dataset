@@ -72,6 +72,8 @@ poetry run python -m terra_project_ll97_dataset.build_dataset \
 - `--carbon_emissions_by_building_type`: Path to the carbon emissions thresholds file. The default is the table shipped with this package, and that default works from any working directory.
 - `-v, --verbose`: Accepted, and currently silent. Setting it does not change the output.
 
+Each run prints how many LL97 buildings had no matching LL84 row. Those buildings remain in both output files with energy use of zero. A count of zero means every LL97 building matched.
+
 ## Output Files
 
 The tool generates two main output files:
