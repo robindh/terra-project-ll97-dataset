@@ -91,6 +91,39 @@ def test_output_path_that_is_a_file_is_rejected(tmp_path):
     assert output_file.read_text() == "x"
 
 
+def test_unmatched_ll97_building_is_reported(tmp_path):
+    ll97 = tmp_path / "ll97.csv"
+    ll97.write_text(
+        (FIXTURES / "ll97_synthetic.csv").read_text() + "4000040004,D\n"
+    )
+    output_dir = tmp_path / "out"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "terra_project_ll97_dataset.build_dataset",
+            "--ll97_dataset",
+            str(ll97),
+            "--ll84_dataset",
+            str(FIXTURES / "ll84_synthetic.csv"),
+            "--output_dir",
+            str(output_dir),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == (
+        "1 of 4 LL97 buildings had no LL84 match. "
+        "That row stays in the output with zero energy use.\n"
+    )
+    yearly = _read_frame(output_dir / YEARLY_NAME)
+    assert "4000040004" in yearly.index
+    assert yearly.loc["4000040004", "Electricity Use - Grid Purchase (kWh)"] == 0.0
+
+
 def test_missing_input_file_is_rejected(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()
@@ -160,7 +193,7 @@ def test_run_from_another_working_directory_matches_golden(tmp_path):
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout == ""
+    assert result.stdout == "All 3 LL97 buildings matched an LL84 row.\n"
     pdt.assert_frame_equal(
         _read_frame(output_dir / YEARLY_NAME),
         _read_frame(FIXTURES / YEARLY_NAME),

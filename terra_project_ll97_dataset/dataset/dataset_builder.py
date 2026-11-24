@@ -18,6 +18,10 @@ from terra_project_ll97_dataset.calculator import penalties
 from terra_project_ll97_dataset.dataset import data_cleansing
 from terra_project_ll97_dataset.util import common
 
+# Original LL84 BBL text. Missing after the left join when an LL97
+# building has no LL84 row.
+_LL84_BBL_COLUMN = "NYC Borough, Block and Lot (BBL)"
+
 
 def _avg_over_year_range(
     year_range: range,
@@ -272,12 +276,13 @@ class DatasetBuilder:
         ll97_df["BBL"] = ll97_df["BBL"].apply(data_cleansing.normalise_bbl)
         ll97_df_indexed = ll97_df.set_index("BBL").sort_index().fillna(pd.NA)
 
-        bbl_column = "NYC Borough, Block and Lot (BBL)"
         ll84_df = pd.read_csv(
             self.arguments.ll84_dataset,
-            dtype={bbl_column: "string"},
+            dtype={_LL84_BBL_COLUMN: "string"},
         )
-        ll84_df["BBL"] = ll84_df[bbl_column].apply(data_cleansing.normalise_bbl)
+        ll84_df["BBL"] = ll84_df[_LL84_BBL_COLUMN].apply(
+            data_cleansing.normalise_bbl
+        )
         ll84_df_indexed = (
             ll84_df.drop_duplicates()
             .set_index("BBL")
@@ -293,8 +298,29 @@ class DatasetBuilder:
             self._joined_dataset
         )
 
+    def _report_ll97_buildings_without_ll84_match(self) -> None:
+        """Print how many LL97 buildings had no LL84 row.
+
+        Those rows stay in both output files. Numeric cleaning turns
+        their missing energy use into 0.0, which otherwise looks like a
+        measured zero-energy building.
+        """
+        joined = self._joined_dataset
+        total = len(joined)
+        missing = int(joined[_LL84_BBL_COLUMN].isna().sum())
+        building = "building" if total == 1 else "buildings"
+        if missing == 0:
+            print(f"All {total} LL97 {building} matched an LL84 row.")
+            return
+        row = "That row stays" if missing == 1 else "Those rows stay"
+        print(
+            f"{missing} of {total} LL97 {building} had no LL84 match. "
+            f"{row} in the output with zero energy use."
+        )
+
     def run(self) -> None:
-        """Join the inputs and write the yearly and period CSVs."""
+        """Join the inputs, report unmatched buildings, and write both CSVs."""
         self._join_ll97_ll84_datasets()
+        self._report_ll97_buildings_without_ll84_match()
         self._build_yearly_dataset()
         self._build_dataset_for_range_of_years()
