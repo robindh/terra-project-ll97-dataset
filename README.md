@@ -74,6 +74,8 @@ poetry run python -m terra_project_ll97_dataset.build_dataset \
 
 Each run prints how many LL97 buildings had no matching LL84 row. Those buildings remain in both output files with energy use of zero. A count of zero means every LL97 building matched.
 
+A missing expected LL84 header stops the run. The error names every missing column.
+
 ## Output Files
 
 The tool generates two main output files:

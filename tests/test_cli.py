@@ -124,6 +124,37 @@ def test_unmatched_ll97_building_is_reported(tmp_path):
     assert yearly.loc["4000040004", "Electricity Use - Grid Purchase (kWh)"] == 0.0
 
 
+def test_missing_ll84_header_names_the_column(tmp_path):
+    dropped = "Natural Gas Use (kBtu)"
+    ll84 = pd.read_csv(FIXTURES / "ll84_synthetic.csv").drop(columns=[dropped])
+    ll84_path = tmp_path / "ll84.csv"
+    ll84.to_csv(ll84_path, index=False)
+    output_dir = tmp_path / "out"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "terra_project_ll97_dataset.build_dataset",
+            "--ll97_dataset",
+            str(FIXTURES / "ll97_synthetic.csv"),
+            "--ll84_dataset",
+            str(ll84_path),
+            "--output_dir",
+            str(output_dir),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1
+    assert result.stderr == (
+        "LL84 data is missing required column: "
+        "'Natural Gas Use (kBtu)'\n"
+    )
+    assert not (output_dir / YEARLY_NAME).exists()
+
+
 def test_missing_input_file_is_rejected(tmp_path):
     output_dir = tmp_path / "out"
     output_dir.mkdir()

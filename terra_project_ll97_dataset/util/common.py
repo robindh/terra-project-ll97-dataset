@@ -35,6 +35,10 @@ ENERGY_TYPES: tuple[EnergyType, ...] = (
     EnergyType("Fuel Oil 4", "Fuel Oil #4 Use (kBtu)", 146.00),
 )
 
+# Borough-block-lot text in an LL84 disclosure. The builder keeps this
+# column and also uses a normalized copy as the join key.
+LL84_BBL = "NYC Borough, Block and Lot (BBL)"
+
 LARGEST_PROPERTY_USE_TYPE = "Largest Property Use Type"
 LARGEST_PROPERTY_USE_GFA_SQFT = (
     "Largest Property Use Type - Gross Floor Area (ft²)"
