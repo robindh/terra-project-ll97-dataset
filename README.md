@@ -117,6 +117,8 @@ source $(poetry env activate)
 poetry run pytest
 ```
 
+Pull requests and pushes to `main` run this same command on Python 3.12 in GitHub Actions.
+
 ## Contributing
 
 1. Fork the repository
