@@ -117,6 +117,8 @@ source $(poetry env activate)
 poetry run pytest
 ```
 
+GitHub Actions runs this same command on Python 3.12 when you start the Tests workflow from the Actions tab.
+
 ## Contributing
 
 1. Fork the repository
