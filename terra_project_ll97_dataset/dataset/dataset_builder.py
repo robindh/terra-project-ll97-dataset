@@ -16,6 +16,7 @@ from terra_project_ll97_dataset.calculator import cost_of_energy
 from terra_project_ll97_dataset.calculator import energy_unit_conversion
 from terra_project_ll97_dataset.calculator import penalties
 from terra_project_ll97_dataset.dataset import data_cleansing
+from terra_project_ll97_dataset.dataset import ll84_source
 from terra_project_ll97_dataset.util import common
 
 
@@ -272,10 +273,7 @@ class DatasetBuilder:
         ll97_df["BBL"] = ll97_df["BBL"].apply(data_cleansing.normalise_bbl)
         ll97_df_indexed = ll97_df.set_index("BBL").sort_index().fillna(pd.NA)
 
-        ll84_df = pd.read_csv(
-            self.arguments.ll84_dataset,
-            dtype={common.LL84_BBL: "string"},
-        )
+        ll84_df = self._load_ll84_disclosure()
         data_cleansing.require_ll84_columns(
             ll84_df,
             data_cleansing.REQUIRED_LL84_COLUMNS,
@@ -297,6 +295,35 @@ class DatasetBuilder:
         self._joined_dataset = data_cleansing.clean_format_numerical_columns(
             self._joined_dataset
         )
+
+    def _load_ll84_disclosure(self) -> pd.DataFrame:
+        """Load the LL84 disclosure and record the file fingerprint.
+
+        The fingerprint is printed and written to ll84_source.txt in
+        the output directory. file_sha256 identifies the exact file.
+        rows_sha256 identifies the rows used for the calculations, so
+        an Open Data update that changes those rows is visible.
+
+        Returns:
+            LL84 rows, including the original BBL text.
+
+        Raises:
+            ll84_source.Ll84SourceError: The download failed, or the
+                requested calendar year cannot be selected.
+        """
+        disclosure = ll84_source.load_ll84_disclosure(
+            getattr(self.arguments, "ll84_dataset", None),
+            getattr(self.arguments, "ll84_year", None),
+        )
+        manifest = disclosure.manifest()
+        print(manifest, end="")
+        manifest_path = os.path.join(
+            self.arguments.output_dir,
+            "ll84_source.txt",
+        )
+        with open(manifest_path, "w", encoding="utf-8") as handle:
+            handle.write(manifest)
+        return disclosure.frame
 
     def _report_ll97_buildings_without_ll84_match(self) -> None:
         """Print how many LL97 buildings had no LL84 row.
