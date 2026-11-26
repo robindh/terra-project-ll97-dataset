@@ -11,6 +11,7 @@ import sys
 from terra_project_ll97_dataset import arguments
 from terra_project_ll97_dataset.dataset import data_cleansing
 from terra_project_ll97_dataset.dataset import dataset_builder
+from terra_project_ll97_dataset.dataset import ll84_source
 
 
 def main() -> None:
@@ -21,7 +22,10 @@ def main() -> None:
     builder = dataset_builder.DatasetBuilder(parsed.args)
     try:
         builder.run()
-    except data_cleansing.MissingLl84ColumnError as error:
+    except (
+        data_cleansing.MissingLl84ColumnError,
+        ll84_source.Ll84SourceError,
+    ) as error:
         print(error, file=sys.stderr)
         sys.exit(1)
 

@@ -57,18 +57,24 @@ The tool creates `--output_dir` when that folder does not exist, including any m
 ```bash
 poetry run python -m terra_project_ll97_dataset.build_dataset \
     --ll97_dataset path/to/ll97_data.csv \
-    --ll84_dataset path/to/ll84_data.csv \
     --output_dir path/to/output_directory
 ```
+
+Omit `--ll84_dataset` to download the NYC Open Data LL84 export for dataset `5zyy-y8am`. That file contains every published calendar year, so the run keeps the latest year. Pass `--ll84_year 2024` to keep a different year.
+
+To use a CSV you already have, pass it with `--ll84_dataset`. That file is filtered only when `--ll84_year` is also set.
+
+Each run writes `ll84_source.txt` in the output directory and prints the same text. It records the source, the calendar year kept, the row count, `file_sha256` for the exact file bytes, and `rows_sha256` for the rows used in the calculations. Compare those two hashes with an earlier run. A different `file_sha256` means the disclosure file changed. A different `rows_sha256` means the rows that produced the numbers changed.
 
 ### Required Arguments
 
 - `--ll97_dataset`: Path to an existing LL97 dataset CSV file
-- `--ll84_dataset`: Path to an existing LL84 dataset CSV file
 - `--output_dir`: Directory where output files will be saved. Created when it does not already exist.
 
 ### Optional Arguments
 
+- `--ll84_dataset`: Path to an existing LL84 disclosure CSV. When omitted, the NYC Open Data export is downloaded.
+- `--ll84_year`: Calendar year to keep from the LL84 disclosure. A download uses the latest year in the file when this is omitted.
 - `--carbon_emissions_by_building_type`: Path to the carbon emissions thresholds file. The default is the table shipped with this package, and that default works from any working directory.
 - `-v, --verbose`: Accepted, and currently silent. Setting it does not change the output.
 
@@ -77,6 +83,8 @@ Each run prints how many LL97 buildings had no matching LL84 row. Those building
 A missing expected LL84 header stops the run. The error names every missing column.
 
 ## Output Files
+
+The tool writes `ll84_source.txt` beside the two calculation files. That file is the fingerprint described above.
 
 The tool generates two main output files:
 

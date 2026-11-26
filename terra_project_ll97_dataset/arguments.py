@@ -1,10 +1,11 @@
 """Command-line arguments for the LL97 dataset builder.
 
-Required inputs are the LL97 covered-buildings file, the latest LL84
-disclosure, and a directory for the two output CSVs. A missing output
-directory is created, including any missing parent directories. The
-carbon-limit table defaults to the copy shipped with this package, so
-the default resolves correctly from any working directory.
+Required inputs are the LL97 covered-buildings file and a directory
+for the two output CSVs. The LL84 disclosure can be a local CSV or the
+NYC Open Data export. A missing output directory is created, including
+any missing parent directories. The carbon-limit table defaults to the
+copy shipped with this package, so the default resolves correctly from
+any working directory.
 """
 
 import argparse
@@ -110,10 +111,17 @@ class BuildDatasetArguments:
         self.parser.add_argument(
             "--ll84_dataset",
             type=_file_path,
-            required=True,
             help=(
-                "location of the .csv file that contains the LL84 dataset "
-                "for the most recent year"
+                "LL84 disclosure CSV. When omitted, the NYC Open Data "
+                "export is downloaded"
+            ),
+        )
+        self.parser.add_argument(
+            "--ll84_year",
+            type=int,
+            help=(
+                "calendar year to keep from the LL84 disclosure. A "
+                "download uses the latest year when this is omitted"
             ),
         )
         self.parser.add_argument(
